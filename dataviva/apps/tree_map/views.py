@@ -2,7 +2,6 @@
 from flask import Blueprint, render_template, g, request
 from dataviva.apps.general.views import get_locale
 from dataviva.translations.dictionary import dictionary
-from dataviva.apps.embed.models import Build
 from dataviva.apps.title.views import get_title
 from dataviva.utils.graphs_services import *
 import urllib

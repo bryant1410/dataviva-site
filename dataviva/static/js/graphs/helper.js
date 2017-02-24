@@ -125,6 +125,7 @@ dictionary['occupation_family'] = lang == 'en' ? 'Family' : 'Família';
 dictionary['occupation_group'] = lang == 'en' ? 'Main Group' : 'Grande Grupo';
 dictionary['Creating URL'] = lang == 'en' ? 'Creating URL' : 'Criando URL';
 dictionary['kg'] = 'KG';
+dictionary['unknown-region'] = lang == 'en' ? 'Unknown Region' : 'Região Desconhecida';
 
 var PLURAL = {
     'municipality': dictionary['municipalities'],
