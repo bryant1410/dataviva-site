@@ -12,54 +12,43 @@ var stacked = document.getElementById('stacked'),
     basicValues = BASIC_VALUES[dataset],
     calcBasicValues = CALC_BASIC_VALUES[dataset];
 
-var buildData = function(apiData, areaMetadata, groupMetadata) {
+
+var buildData = function(apiResponse, areaMetadata, groupMetadata) {
     
     var getAttrByName = function(item, attr) {
         var index = headers.indexOf(attr);
         return item[index];
-    }
+    };
 
     var data = [];
-    var headers = apiData.headers;
+    var headers = apiResponse.headers;
 
-    apiData.data.forEach(function(item) {
+    apiResponse.data.forEach(function(item) {
         try {
             var dataItem = {};
 
-            headers.forEach(function(header){
+            headers.forEach(function(header) {
                 dataItem[header] = getAttrByName(item, header);
                 if (['wage', 'average_wage'].indexOf(header) >= 0)
                     dataItem[header] = +dataItem[header]
             });
 
-            dataItem[DICT[dataset]['item_id'][area]] = dataItem[area];
+            if (group && HAS_ICONS.indexOf(group) >= 0)
+                dataItem['icon'] = '/static/img/icons/' + group + '/' + group + '_' + dataItem[group] + '.png';
+            
+            if (area in DICT[dataset]['item_id'])
+                dataItem[DICT[dataset]['item_id'][area]] = dataItem[area];
 
-            for (key in calcBasicValues) {
-                dataItem[key] = calcBasicValues[key](dataItem);   
-            }
+            for (key in calcBasicValues)
+                dataItem[key] = calcBasicValues[key](dataItem);
 
             depths.forEach(function(depth) {
-                if (depth != area && depth != group) {
+                if (depth != area)
                     dataItem[depth] = areaMetadata[dataItem[area]][depth]['name_' + lang];
-                }
             });
-            
+           
             dataItem[area] = areaMetadata[dataItem[area]]['name_' + lang];
             
-            if (group) {
-                if (HAS_ICONS.indexOf(group) >= 0)
-                    dataItem['icon'] = '/static/img/icons/' + group + '/' + group + '_' + dataItem[group] + '.png';
-                dataItem[group] = groupMetadata[dataItem[group]]['name_' + lang];
-            }
-            
-            if (dataItem.microregion){
-                dataItem.microregion = dataItem.microregion + ' ';
-            } else if (dataItem.state){
-                dataItem.state = ' ' + dataItem.state;
-            }
-            if (dataItem.month){
-                dataItem.month = dataItem.year + "/" + dataItem.month + "/01";
-            }
 
             data.push(dataItem);
         } catch(e) {
@@ -230,26 +219,26 @@ var loadViz = function (data){
         
         if(type == 'establishment_count')
             return dictionary['establishment_count']
-    }
+    };
     
     data_type = {"value": size, "label": yAxisLabelBuilder(size)}
 
     var viz = d3plus.viz()
-        .title({"value": "Inserir título", "font": {"family": "Times", "size": "24","align": "left"}})
-        .axes({"background": {"color": "white"}})
         .container("#stacked")
-        .type("stacked")
         .data(data)
+        .type("stacked")
         .y(data_type)  
         .x({"value": "year", "label": ""})
-        .time("year")
+        .axes({"background": {"color": "white"}})
         .background("transparent")
-        .shape({"interpolate": "monotone"})
+        .time("year")
+        .icon(group == 'state' ? {'value': 'icon'} : {'value': 'icon', 'style': 'knockout'})
+        .legend({'filters': true, 'order': {'sort': 'desc', 'value': 'size'}})
+        .footer(dictionary['data_provided_by'] + ' ' + dataset.toUpperCase())
         .title(titleHelper(area))
+        .shape({"interpolate": "monotone"})
         .tooltip(tooltipBuilder())
         .ui(uiBuilder())
-        .icon(group == 'state' ? {'value': 'icon'} : {'value': 'icon', 'style': 'knockout'})
-        .footer(dictionary['data_provided_by'] + ' ' + dataset.toUpperCase())
         .format(formatHelper())
 
         if (group) {
@@ -264,7 +253,7 @@ var loadViz = function (data){
 
         viz.draw()
 
-        toolsBuilder(stacked.id, viz, data, titleBuilder().value, uiBuilder());
+        toolsBuilder(viz, data, titleHelper().value, uiBuilder());
 }
 
 var getUrls = function() {
@@ -280,8 +269,6 @@ var getUrls = function() {
         'http://api.staging.dataviva.info/metadata/' + area
     ];
 
-    if (group)
-        urls.push('http://api.staging.dataviva.info/metadata/' + group);
     return urls;
 };
 
